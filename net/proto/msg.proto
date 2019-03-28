@@ -19,6 +19,7 @@ message UserInfo
 }
 
 //msg
+<<<<<<< HEAD
 
 message NewConnect
 {
@@ -33,6 +34,11 @@ message DelConnect
 message ServerDelConnect
 {
 	int64 id = 1;
+=======
+message ConnectRS  //建立链接返回
+{
+	int32	result = 1;
+>>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 }
 
 message ServerTick

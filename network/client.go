@@ -1,4 +1,5 @@
 package network
+<<<<<<< HEAD
 
 import (
 	"time"
@@ -120,3 +121,5 @@ func startClient() {
 		go client.Run()
 	}
 }
+=======
+>>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729

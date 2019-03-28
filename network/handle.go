@@ -3,6 +3,10 @@ package network
 import (
 	"fmt"
 
+<<<<<<< HEAD
+=======
+	conf "github.com/mikeqiao/ant/config"
+>>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 	"github.com/mikeqiao/ant/log"
 	mod "github.com/mikeqiao/ant/module"
 	"github.com/mikeqiao/ant/net"
@@ -10,6 +14,7 @@ import (
 	"github.com/mikeqiao/ant/rpc"
 )
 
+<<<<<<< HEAD
 func HandleNewConnect(msg interface{}, data *net.UserData) {
 	m := msg.(*proto.NewConnect)
 	if nil != data && nil != data.Agent {
@@ -34,6 +39,8 @@ func HandleServerDelConnect(msg interface{}, data *net.UserData) {
 	module.Close()
 }
 
+=======
+>>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 func HandleServerTick(msg interface{}, data *net.UserData) {
 	m := msg.(*proto.ServerTick)
 	// 消息的发送者
@@ -65,8 +72,15 @@ func HandleServerLoginRQ(msg interface{}, data *net.UserData) {
 	data.Agent.WriteMsg(&proto.ServerLoginRS{
 		Result: 0,
 		Serverinfo: &proto.ServerInfo{
+<<<<<<< HEAD
 			ServerId:      data.Agent.SUID,
 			ServerVersion: data.Agent.Version,
+=======
+			ServerId:      conf.Config.ServiceInfo.ServerId,
+			ServerType:    conf.Config.ServiceInfo.ServerType,
+			ServerName:    conf.Config.ServiceInfo.ServerName,
+			ServerVersion: conf.Config.ServiceInfo.ServerVersion,
+>>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 			State:         1,
 		},
 	})

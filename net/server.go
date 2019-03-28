@@ -14,7 +14,10 @@ func NewServer() {
 
 type TCPServer struct {
 	UId             int64
+<<<<<<< HEAD
 	Version         int32
+=======
+>>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 	Name            string
 	Addr            string                              // 监听的地址端口
 	MaxConnNum      int                                 // 最大链接数
@@ -103,8 +106,12 @@ func (this *TCPServer) run() {
 
 		tcpConn := newTCPConn(conn, this.PendingWriteNum, this.msgParser)
 		agent := this.NewAgent(tcpConn, this.Processor)
+<<<<<<< HEAD
 		agent.SUID = this.UId
 		agent.Version = this.Version
+=======
+
+>>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 		go func() {
 
 			agent.Start(this.Name)
