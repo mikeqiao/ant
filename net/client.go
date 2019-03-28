@@ -6,18 +6,13 @@ import (
 	"time"
 
 	"github.com/mikeqiao/ant/log"
-<<<<<<< HEAD
+
 	"github.com/mikeqiao/ant/net/proto"
-=======
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 )
 
 type TCPClient struct {
 	UId             int64
-<<<<<<< HEAD
 	Version         int32
-=======
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 	sync.Mutex                                          // 锁
 	Addr            string                              // 地址
 	ConnNum         int                                 // 链接数量
@@ -103,7 +98,6 @@ reconnect:
 	tcpConn := newTCPConn(conn, this.PendingWriteNum, this.msgParser)
 	agent := this.NewAgent(tcpConn, this.Processor)
 	this.Agent = agent
-<<<<<<< HEAD
 
 	agent.WriteMsg(&proto.ServerLoginRQ{
 		Serverinfo: &proto.ServerInfo{
@@ -112,19 +106,6 @@ reconnect:
 			State:         1,
 		},
 	})
-=======
-	/*
-		agent.WriteMsg(&tproto.ServerLoginRQ{
-			Serverinfo: &tproto.ServerInfo{
-				ServerId:      bconf.Config.ServiceInfo.ServerId,
-				ServerType:    bconf.Config.ServiceInfo.ServerType,
-				ServerName:    bconf.Config.ServiceInfo.ServerName,
-				ServerVersion: bconf.Config.ServiceInfo.ServerVersion,
-				GameType:      bconf.Config.ServiceInfo.GameType,
-				State:         1,
-			},
-		})*/
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 	agent.Run()
 
 	//cleanup

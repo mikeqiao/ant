@@ -6,11 +6,8 @@ import (
 	"time"
 
 	"github.com/mikeqiao/ant/log"
-<<<<<<< HEAD
 	"github.com/mikeqiao/ant/net/msgtype"
 	"github.com/mikeqiao/ant/net/proto"
-=======
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 )
 
 var CreatID = int64(1)
@@ -34,11 +31,8 @@ type TcpAgent struct {
 	ctype     int32          //连接类型 1 server  2 client
 	wg        sync.WaitGroup // 链接wait
 	userData  interface{}
-<<<<<<< HEAD
 	Version   int32
 	SUID      int64
-=======
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 }
 
 func NewAgent(conn *TCPConn, tp Processor) *TcpAgent {
@@ -52,11 +46,7 @@ func NewAgent(conn *TCPConn, tp Processor) *TcpAgent {
 	a.tick = time.Now().Unix()
 	a.islogin = false
 	a.isClose = false
-<<<<<<< HEAD
 	a.isUpdate = true
-=======
-	a.isUpdate = false
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 	return a
 }
 
@@ -65,7 +55,6 @@ func (a *TcpAgent) SetUID(uid int64) {
 }
 
 func (a *TcpAgent) Start(name string) {
-<<<<<<< HEAD
 	if name != "Out" {
 		a.ctype = 1
 		return
@@ -82,9 +71,6 @@ func (a *TcpAgent) Start(name string) {
 		log.Debug("Start Add Agent error: %v", err)
 	}
 	a.ctype = 2
-=======
-
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 }
 
 func (a *TcpAgent) Run() {
@@ -152,19 +138,10 @@ func (a *TcpAgent) Update() {
 
 		case <-t2.C:
 			if a.isUpdate == true {
-<<<<<<< HEAD
 				nowtime := time.Now().Unix()
 				a.WriteMsg(&proto.ServerTick{
 					Time: nowtime,
 				})
-
-=======
-				//		nowtime := time.Now().Unix()
-				//		a.WriteMsg(&tproto.ServerTick{
-				//			Time: nowtime,
-				//		})
-				//	log.Debug("send tick: %v, %v", nowtime, a.conn.RemoteAddr())
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 			}
 			t2.Reset(time.Second * 10)
 		}
@@ -215,7 +192,6 @@ func (a *TcpAgent) RemoteAddr() net.Addr {
 }
 
 func (a *TcpAgent) Close() {
-<<<<<<< HEAD
 	var msg interface{}
 	var id uint16
 	if a.ctype == 2 {
@@ -235,12 +211,9 @@ func (a *TcpAgent) Close() {
 	}
 	err := a.Processor.Route(id, msg, ta)
 	if err != nil {
-		log.Debug("OutTime Add Agent error: %v", err)
+		log.Debug("Agent error: %v", err)
 
 	}
-
-=======
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 	a.conn.Close()
 	a.isClose = true
 	a.wg.Wait()

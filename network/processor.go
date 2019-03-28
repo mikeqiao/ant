@@ -32,7 +32,6 @@ func (p *PL) GetData(id int32) net.Processor {
 	}
 }
 
-<<<<<<< HEAD
 func NewPl() {
 	p := new(PL)
 	p.Init()
@@ -49,20 +48,6 @@ func Run() {
 	startManager()
 	startServer()
 	startClient()
-=======
-func NewPl() *PL {
-	p := new(PL)
-	p.Init()
-	return p
-}
-
-func Init() {
-	P = NewPl()
-}
-
-func Run() {
-	startServer()
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 }
 
 func Close() {
