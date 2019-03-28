@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -11,6 +12,8 @@ import (
 	"time"
 
 	"github.com/mikeqiao/ant/common"
+	conf "github.com/mikeqiao/ant/config"
+	"github.com/mikeqiao/ant/group"
 )
 
 // levels
@@ -23,10 +26,10 @@ const (
 )
 
 const (
-	printDebug   = "[debug  ] "
+	printDebug   = "[debug] "
 	printRelease = "[release] "
-	printError   = "[error  ] "
-	printFatal   = "[fatal  ] "
+	printError   = "[error] "
+	printFatal   = "[fatal] "
 )
 
 var gLogger, _ = New("", "", 0, log.LstdFlags|log.Llongfile)
@@ -86,8 +89,6 @@ func New(pathname, strname string, level, flag int) (*Logger, error) {
 	logger.day = day
 	logger.data = common.NewQueue()
 	logger.dowrite = make(chan int)
-
-	go logger.Run()
 	return logger, nil
 }
 
@@ -108,16 +109,24 @@ func Fatal(format string, a ...interface{}) {
 }
 
 func Close() {
-	gLogger.Close()
 	gLogger.isClose = true
+}
+
+func Export(logger *Logger) {
+	if logger != nil {
+		gLogger = logger
+	}
 }
 
 func (l *Logger) Run() {
 	for {
 		if nil != l.data {
-			value, ok := l.data.Pop().(string)
-			if ok && "" != value {
-				l.baseLogger.Output(3, value)
+			value, ok := l.data.Pop().(bytes.Buffer)
+			if ok {
+				d := value.String()
+				if "" != d {
+					l.baseLogger.Output(3, d)
+				}
 			}
 		}
 		if l.isClose && 0 == l.data.Len() {
@@ -125,6 +134,8 @@ func (l *Logger) Run() {
 		}
 	}
 Loop:
+	l.Close()
+	group.Done()
 }
 
 func (l *Logger) ChangeFile() {
@@ -181,16 +192,36 @@ func (l *Logger) doPrintf(level int, printLevel string, format string, a ...inte
 
 	format = printLevel + format
 	t := time.Now().String()
-	data := t[:26]
+	var buffer bytes.Buffer
+	buffer.WriteString(t[:26])
 	_, file, line, ok := runtime.Caller(2)
 	if ok {
-		data = data + " " + file + ":" + strconv.Itoa(line)
+		buffer.WriteString(" ")
+		buffer.WriteString(file)
+		buffer.WriteString("	line:")
+		buffer.WriteString(strconv.Itoa(line))
+		buffer.WriteString(":")
 	}
-	data = data + fmt.Sprintf(format, a...)
-
-	l.data.Push(data)
+	buffer.WriteString(fmt.Sprintf(format, a...))
+	l.data.Push(buffer)
 
 	if level == FatalLevel {
 		os.Exit(1)
 	}
+}
+
+func Init() {
+	if conf.Config.LogLevel < MaxLevel {
+		logger, err := New(conf.Config.ServiceInfo.ServerName, conf.Config.LogPath, conf.Config.LogLevel, conf.Config.LogFlag)
+		if err != nil {
+			panic(err)
+		}
+		Export(logger)
+	}
+}
+
+func Run() {
+	group.Add(1)
+	go gLogger.Run()
+
 }
