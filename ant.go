@@ -17,6 +17,7 @@ func Start(f Func) {
 	f.Init()
 	//开始运行服务程序
 	Run()
+	log.Debug("server is start")
 	//设置信号接收
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)

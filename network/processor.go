@@ -33,8 +33,8 @@ func (p *PL) GetData(id int32) net.Processor {
 }
 
 func NewPl() {
-	p := new(PL)
-	p.Init()
+	P = new(PL)
+	P.Init()
 }
 
 func Init() {

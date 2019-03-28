@@ -2,7 +2,7 @@ package net
 
 type Processor interface {
 	//发送处理
-	Route(id uint16, msg interface{}, userData interface{}) error
+	Route(id uint16, msg interface{}, userData *UserData) error
 	//解包数据
 	Unmarshal(data []byte) (uint16, interface{}, error)
 	//打包数据

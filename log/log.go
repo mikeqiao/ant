@@ -65,7 +65,6 @@ func New(pathname, strname string, level, flag int) (*Logger, error) {
 			now.Month(),
 			now.Day(),
 			strname)
-
 		file, err := os.OpenFile(path.Join(pathname, filename), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			return nil, err
@@ -212,7 +211,7 @@ func (l *Logger) doPrintf(level int, printLevel string, format string, a ...inte
 
 func Init() {
 	if conf.Config.LogLevel < MaxLevel {
-		logger, err := New(conf.Config.ServiceInfo.ServerName, conf.Config.LogPath, conf.Config.LogLevel, conf.Config.LogFlag)
+		logger, err := New(conf.Config.LogPath, conf.Config.ServiceInfo.ServerName, conf.Config.LogLevel, conf.Config.LogFlag)
 		if err != nil {
 			panic(err)
 		}

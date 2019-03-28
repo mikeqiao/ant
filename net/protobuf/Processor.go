@@ -11,12 +11,9 @@ import (
 	"github.com/mikeqiao/ant/log"
 	mod "github.com/mikeqiao/ant/module"
 	"github.com/mikeqiao/ant/net"
-<<<<<<< HEAD
 	"github.com/mikeqiao/ant/net/msgtype"
 	msg "github.com/mikeqiao/ant/net/proto"
 	"github.com/mikeqiao/ant/network"
-=======
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 )
 
 // -------------------------
@@ -47,7 +44,6 @@ func NewProcessor() *Processor {
 
 func (p *Processor) baseMsg() {
 
-<<<<<<< HEAD
 	p.Register(&msg.NewConnect{}, msgtype.NewConnect)
 	p.Register(&msg.DelConnect{}, msgtype.DelConnect)
 	p.Register(&msg.ServerDelConnect{}, msgtype.ServerDelConnect)
@@ -70,8 +66,6 @@ func (p *Processor) baseMsg() {
 	p.SetHandler(msgtype.ServerCall, network.HandleServerCall)
 	p.SetHandler(msgtype.ServerCallBack, network.HandleServerCallBack)
 
-=======
->>>>>>> c9145dbb314b8f9dafdcbd3aa6c14cf2edd80729
 }
 
 func (p *Processor) SetByteOrder(littleEndian bool) {

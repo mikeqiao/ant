@@ -62,7 +62,7 @@ func (a *TcpAgent) Start(name string) {
 	msg := &proto.NewConnect{
 		Id: a.UId,
 	}
-	ta := UserData{
+	ta := &UserData{
 		Agent: a,
 		UId:   a.UId,
 	}
@@ -93,7 +93,7 @@ func (a *TcpAgent) Run() {
 				log.Debug("unmarshal message error: %v", err)
 			}
 			if msg != nil {
-				ta := UserData{
+				ta := &UserData{
 					Agent: a,
 					UId:   a.UId,
 				}
@@ -205,7 +205,7 @@ func (a *TcpAgent) Close() {
 		}
 		id = msgtype.ServerDelConnect
 	}
-	ta := UserData{
+	ta := &UserData{
 		Agent: a,
 		UId:   a.UId,
 	}

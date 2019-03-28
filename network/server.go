@@ -132,7 +132,7 @@ func (s *SeverManager) DelData(id int64) {
 }
 
 func NewSeverManager() {
-	SM := new(SeverManager)
+	SM = new(SeverManager)
 	SM.Init()
 }
 
