@@ -3,7 +3,7 @@ package common
 import (
 	"sync"
 
-	"gopkg.in/eapache/queue.v1"
+	queue "gopkg.in/eapache/queue.v1"
 )
 
 type Queue struct {
@@ -24,25 +24,21 @@ func NewQueue() *Queue {
 func (q *Queue) Pop() (v interface{}) {
 	c := q.cond
 	buffer := q.buffer
-
 	q.lock.Lock()
-	defer q.lock.Unlock()
 	if 0 == buffer.Length() && !q.closed {
 		c.Wait()
 	}
-
 	if buffer.Length() > 0 {
 		v = buffer.Peek()
 		buffer.Remove()
 	}
+	q.lock.Unlock()
 	return
 }
 
 func (q *Queue) TryPop() (v interface{}, ok bool) {
 	buffer := q.buffer
-
 	q.lock.Lock()
-	defer q.lock.Unlock()
 	if buffer.Length() > 0 {
 		v = buffer.Peek()
 		buffer.Remove()
@@ -50,30 +46,31 @@ func (q *Queue) TryPop() (v interface{}, ok bool) {
 	} else if q.closed {
 		ok = true
 	}
+	q.lock.Unlock()
 	return
 }
 
 func (q *Queue) Push(v interface{}) {
 	q.lock.Lock()
-	defer q.lock.Unlock()
 	if !q.closed {
 		q.buffer.Add(v)
 		q.cond.Signal()
 	}
+	q.lock.Unlock()
 }
 
 func (q *Queue) Len() (l int) {
 	q.lock.Lock()
-	defer q.lock.Unlock()
 	l = q.buffer.Length()
+	q.lock.Unlock()
 	return
 }
 
 func (q *Queue) Close() {
 	q.lock.Lock()
-	defer q.lock.Unlock()
 	if !q.closed {
 		q.closed = true
 		q.cond.Signal()
 	}
+	q.lock.Unlock()
 }

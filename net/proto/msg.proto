@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package proto;
+
+//info
+message ServerInfo 
+{
+	int64	serverId = 1;
+	int32	serverType = 2;
+	int32  	serverVersion = 3;
+	int64  	state = 4;
+	string  serverName = 5;
+}
+
+message UserInfo
+{
+	int64 UId = 1;
+	repeated int64 UsersId = 2;
+}
+
+//msg
+
+message NewConnect
+{
+	int64	id = 1;
+}
+
+message DelConnect
+{
+	int64	id = 1;
+}
+
+message ServerDelConnect
+{
+	int64 id = 1;
+}
+
+message ServerTick
+{
+	int64 time = 1;
+	int64 state = 2;
+}
+
+message ServerLoginRQ
+{
+	ServerInfo serverinfo = 1;
+}
+
+message ServerLoginRS
+{
+	int32	result = 1;
+	ServerInfo serverinfo = 2;
+}
+
+message ServerRegister
+{
+	int64	uid = 1; //服务器uid(注册模块的uid)
+	repeated uint32  	fuid = 2; //提供的func uid()	
+	int32 	type = 3; //1登陆注册 2 登陆注册返回， 3广播注册
+}
+
+message ServerDelFunc
+{
+	int64 uid = 1;
+	repeated uint32 fuid = 2;
+}
+
+message ServerCall
+{
+	UserInfo	User = 1; //服务对象
+	int64	fromMId = 2; //请求者（模块id）
+	int64	toMId = 3; //接受者（模块id）
+	uint32	fUId = 4; //目标 function id
+	string	cUId = 5; //回调 callback id
+	bytes   msginfo = 6;// 参数
+}
+
+message ServerCallBack
+{
+	UserInfo	User = 1; //服务对象
+	int64	fromMId = 2; //请求者（模块id）
+	int64	toMId = 3; //接受者（模块id）
+	string	cUId = 4; //
+	bytes   msginfo = 5;//返回结果
+}
