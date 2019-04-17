@@ -58,3 +58,4 @@ func (d *DataMod) Get(key interface{}) interface{} {
 func (d *DataMod) InitData() {
 
 }
+

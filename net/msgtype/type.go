@@ -12,4 +12,6 @@ const (
 	ServerDelFunc
 	ServerCall
 	ServerCallBack
+	DBServerRQ
+	DBServerRS
 )

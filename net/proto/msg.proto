@@ -82,3 +82,27 @@ message ServerCallBack
 	string	cUId = 4; //
 	bytes   msginfo = 5;//返回结果
 }
+
+message DBServerRQ
+{
+	int32 type = 1;
+	uint32 msgid = 2;
+	string sql = 3;
+	repeated string key = 4;//[]获取的字段
+}
+
+message DBServerRS
+{
+	int32 result = 1;
+}
+
+//DB 
+message DataTableConfig
+{
+	string name = 1;
+	string data = 2;
+}
+message ArrayTableConfig
+{
+	repeated DataTableConfig data = 1;
+}

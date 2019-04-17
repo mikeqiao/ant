@@ -9,4 +9,6 @@ type Processor interface {
 	Marshal(msg interface{}) (uint16, [][]byte, error)
 
 	Register(msg interface{}, id uint16) uint16
+
+	GetMsg(id uint16) interface{}
 }

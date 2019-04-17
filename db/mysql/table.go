@@ -1,13 +1,7 @@
 package mysql
 
-import (
-	"github.com/jinzhu/gorm"
-)
-
-type TableConfig struct {
-	gorm.Model
-	Name string `gorm:"primary_key;size:75"`
-	Data []byte `gorm:"size:10000"`
+type DATA interface {
+	GetFieldID(ks []string) (p []interface{})
 }
 
 type Types struct {

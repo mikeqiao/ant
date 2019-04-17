@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/mikeqiao/ant/db/mysql"
 	"github.com/mikeqiao/ant/log"
 	mod "github.com/mikeqiao/ant/module"
 	"github.com/mikeqiao/ant/net"
@@ -54,6 +55,8 @@ func (p *Processor) baseMsg() {
 	p.Register(&msg.ServerDelFunc{}, msgtype.ServerDelFunc)
 	p.Register(&msg.ServerCall{}, msgtype.ServerCall)
 	p.Register(&msg.ServerCallBack{}, msgtype.ServerCallBack)
+	p.Register(&msg.DBServerRQ{}, msgtype.DBServerRQ)
+	p.Register(&msg.DBServerRS{}, msgtype.DBServerRS)
 
 	p.SetHandler(msgtype.NewConnect, network.HandleNewConnect)
 	p.SetHandler(msgtype.DelConnect, network.HandleDelConnect)
@@ -90,6 +93,9 @@ func (p *Processor) Register(msg interface{}, id uint16) uint16 {
 	i.msgType = msgType
 	p.msgInfo[id] = i
 	p.msgID[msgType] = id
+	if nil != mysql.DB {
+		mysql.DB.Register(msg)
+	}
 	return id
 }
 
@@ -173,4 +179,14 @@ func (p *Processor) Range(f func(id uint16, t reflect.Type)) {
 	for id, i := range p.msgInfo {
 		f(uint16(id), i.msgType)
 	}
+}
+
+func (p *Processor) GetMsg(id uint16) interface{} {
+	i, ok := p.msgInfo[id]
+	if !ok {
+		log.Error("message id %v not registered", id)
+		return nil
+	}
+	msg := reflect.New(i.msgType.Elem()).Interface()
+	return msg
 }
