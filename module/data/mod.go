@@ -2,6 +2,9 @@ package mod
 
 import (
 	"sync"
+	"time"
+
+	"github.com/mikeqiao/ant/group"
 )
 
 type DataMod struct {
@@ -13,6 +16,12 @@ type DataMod struct {
 func (d *DataMod) Init() {
 	d.Dlist = make(map[interface{}]Data)
 	d.closeSig = make(chan bool, 1)
+}
+
+func (d *DataMod) Start() {
+
+	group.Add(1)
+	go d.Run()
 }
 
 func (d *DataMod) Close() {
@@ -55,7 +64,26 @@ func (d *DataMod) Get(key interface{}) interface{} {
 	return nil
 }
 
-func (d *DataMod) InitData() {
-
+func (d *DataMod) Run() {
+	t1 := time.NewTimer(time.Second * 1)
+	for {
+		select {
+		case <-d.closeSig:
+			d.Close()
+			goto Loop
+		case <-t1.C:
+			d.Update()
+			t1.Reset(time.Second * 1)
+		}
+	}
+Loop:
+	group.Done()
 }
 
+func (d *DataMod) Update() {
+	for _, v := range d.Dlist {
+		if nil != v {
+			v.Update()
+		}
+	}
+}

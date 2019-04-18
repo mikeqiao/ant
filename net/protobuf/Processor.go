@@ -125,7 +125,12 @@ func (p *Processor) Route(id uint16, msg interface{}, data *net.UserData) error 
 		i.msgHandler(msg, data)
 	} else {
 		if 0 != i.fid {
-			mod.RPC.Route(i.fid, nil, msg, data)
+			cb := func(in interface{}, e error) {
+				if nil != in && nil != data && nil != data.Agent {
+					data.Agent.WriteMsg(in)
+				}
+			}
+			mod.RPC.Route(i.fid, cb, msg, data)
 		} else {
 			return fmt.Errorf(" msgid:%v, mod is nil :%v", id, i)
 		}

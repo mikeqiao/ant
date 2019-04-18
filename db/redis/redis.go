@@ -9,11 +9,6 @@ import (
 	"github.com/mikeqiao/ant/log"
 )
 
-type Setdata struct {
-	Table string
-	Value string
-	Score float64
-}
 type CRedis struct {
 	Pool *redis.Pool
 	Life int32
@@ -34,8 +29,6 @@ func Newfactory(name string) *redis.Pool {
 	port := conf.Config.Redisconfig.Port
 	password := conf.Config.Redisconfig.Password
 	count := conf.Config.Redisconfig.MaxIdle
-	log.Debug("conf-redis: %v:%v - %v", host, port, password)
-
 	pool := &redis.Pool{
 		IdleTimeout: 180 * time.Second,
 		MaxIdle:     int(count),
@@ -46,13 +39,14 @@ func Newfactory(name string) *redis.Pool {
 				redis.DialPassword(password),
 			)
 			if err != nil {
-				log.Debug("err:%v", err)
+				log.Error("err:%v", err)
 				return nil, err
 			}
 
 			return c, nil
 		},
 	}
+	log.Debug("connnect redis success")
 	return pool
 }
 
