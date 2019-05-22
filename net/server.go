@@ -8,10 +8,6 @@ import (
 	"github.com/mikeqiao/ant/log"
 )
 
-func NewServer() {
-
-}
-
 type TCPServer struct {
 	UId             int64
 	Version         int32
@@ -103,7 +99,7 @@ func (this *TCPServer) run() {
 
 		tcpConn := newTCPConn(conn, this.PendingWriteNum, this.msgParser)
 		agent := this.NewAgent(tcpConn, this.Processor)
-		agent.SUID = this.UId
+		agent.SetLocalUID(this.UId)
 		agent.Version = this.Version
 		go func() {
 

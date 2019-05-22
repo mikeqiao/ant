@@ -46,11 +46,10 @@ func NewModule(id, state int64, version, start int32) *Module {
 
 func (m *Module) SetAgent(a *net.TcpAgent) {
 	if nil != a {
-		a.SetUID(m.mid)
+		a.SetRemotUID(m.mid)
 		a.SetLogin()
 		m.Agent = a
 	}
-
 }
 
 func (m *Module) Init() {
@@ -60,7 +59,7 @@ func (m *Module) Init() {
 	m.server = rpc.NewServer(m.chanlen)
 	m.client = rpc.NewClient(m.chanlen, m.server)
 	if nil != m.Agent {
-		m.Agent.SetUID(m.mid)
+		m.Agent.SetRemotUID(m.mid)
 	}
 }
 
@@ -99,6 +98,7 @@ func (m *Module) Run() {
 		}
 	}
 Loop:
+	log.Debug("modul close id:%v", m.mid)
 	m.working = false
 	group.Done()
 }
@@ -121,7 +121,7 @@ func (m *Module) RegisterRemote(id uint32, f interface{}) {
 	RPC.RegisterRemote(id, m)
 }
 
-func (m *Module) Route(id uint32, cb interface{}, in interface{}, data *net.UserData) {
+func (m *Module) Route(fid, did uint32, cb interface{}, in interface{}, data *net.UserData) {
 
 	if !m.working {
 		log.Error("module not working")
@@ -129,7 +129,10 @@ func (m *Module) Route(id uint32, cb interface{}, in interface{}, data *net.User
 		return
 	}
 	if nil != m.client {
-		m.client.CallAsyn(m.mid, id, cb, in, data)
+
+		m.client.CallAsyn(m.mid, fid, did, cb, in, data)
+	} else {
+		log.Error("client not working")
 	}
 }
 
@@ -169,10 +172,10 @@ func (m *Module) GetFunc() (fl []uint32) {
 	return
 }
 
-func (m *Module) SendFunc(t int32) {
+func (m *Module) SendFunc(t int32, uid int64) {
 	msg := new(proto.ServerRegister)
 	msg.Type = t
-	msg.Uid = m.mid
+	msg.Uid = uid
 	for k, v := range RPC.Functions {
 		if nil != v && 0 == v.ftype {
 			msg.Fuid = append(msg.Fuid, k)

@@ -1,4 +1,4 @@
-package mod
+package datamod
 
 import "sync"
 

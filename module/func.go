@@ -21,7 +21,8 @@ func NewRPC() *RPCServer {
 type RServer struct {
 	ml    map[int64]*Module //服务提供者
 	fid   uint32            //所提供的服务(type)
-	ftype int32             // 0 本地服务 1 远程服务
+	did   uint32
+	ftype int32 // 0 本地服务 1 远程服务
 }
 
 func (r *RServer) Init(id uint32) {
@@ -55,8 +56,8 @@ func (r *RServer) DelModule(s *Module) {
 	}
 }
 
-func (r *RServer) Route(cb interface{}, in interface{}, data *net.UserData) {
-	id := r.fid
+func (r *RServer) Route(fid uint32, cb interface{}, in interface{}, data *net.UserData) {
+	did := r.fid
 	var m *Module
 	for k, v := range r.ml {
 		if nil != v {
@@ -68,9 +69,10 @@ func (r *RServer) Route(cb interface{}, in interface{}, data *net.UserData) {
 		}
 	}
 	if nil != m {
-		m.Route(id, cb, in, data)
+		log.Debug("mod:%v", m)
+		m.Route(fid, did, cb, in, data)
 	} else {
-		log.Debug("not find working module, fid:%v", id)
+		log.Debug("not find working module, fid:%v", did)
 		ExecCb(cb)
 	}
 }
@@ -134,17 +136,28 @@ func (r *RPCServer) DelFunction(id uint32, s *Module) {
 	r.mutex.Unlock()
 }
 
-func (r *RPCServer) Route(id uint32, cb interface{}, in interface{}, data *net.UserData) {
+func (r *RPCServer) Route(fid, did uint32, cb interface{}, in interface{}, data *net.UserData) {
 	if nil == in {
 		log.Debug("in is nil ")
 		return
 	}
-	if v, ok := r.Functions[id]; ok {
+	if v, ok := r.Functions[did]; ok {
 		if nil != v {
-			v.Route(cb, in, data)
+			log.Debug("have did:%v ", did)
+			v.Route(fid, cb, in, data)
 		}
 	} else {
-		ExecCb(cb)
+		log.Debug("no did:%v ", did)
+		if fid != HandleForwardMsg {
+			if fv, ok := r.Functions[HandleForwardMsg]; ok && nil != fv && 1 == fv.ftype {
+				fv.Route(fid, cb, in, data)
+			} else {
+				ExecCb(cb)
+			}
+		} else {
+			ExecCb(cb)
+		}
+
 	}
 }
 

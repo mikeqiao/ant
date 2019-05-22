@@ -217,12 +217,21 @@ func SqlChangeName(table, oldname, newname, dtype string) (sql string) {
 }
 
 func SqlChangeDType(table, name, dtype, def string) (sql string) {
-	sql = "ALTER TABLE " + table + " MODIFY COLUMN " + name + " " + dtype + " NOT NULL DEFAULT " + def
+	if "text" == dtype {
+		sql = "ALTER TABLE " + table + " MODIFY COLUMN " + name + " " + dtype + " NOT NULL"
+	} else {
+		sql = "ALTER TABLE " + table + " MODIFY COLUMN " + name + " " + dtype + " NOT NULL DEFAULT " + def
+	}
 	return
 }
 
 func SqlAddColumn(table, name, dtype, def string) (sql string) {
-	sql = "ALTER TABLE " + table + " ADD " + name + " " + dtype + " NOT NULL DEFAULT " + def
+	if "text" == dtype {
+		sql = "ALTER TABLE " + table + " ADD " + name + " " + dtype + " NOT NULL"
+	} else {
+		sql = "ALTER TABLE " + table + " ADD " + name + " " + dtype + " NOT NULL DEFAULT " + def
+	}
+
 	return
 }
 
@@ -249,7 +258,7 @@ func CheckType(k string, v reflect.Kind) (tstr, def string) {
 		if ok {
 			tstr = "varchar(64)"
 		} else if CheckData(k) {
-			tstr = "varbinary(8000)"
+			tstr = "text"
 		} else {
 			tstr = "varchar(255)"
 		}
@@ -261,7 +270,7 @@ func CheckType(k string, v reflect.Kind) (tstr, def string) {
 		tstr = "double"
 		def = "'0'"
 	case reflect.Slice:
-		tstr = "varbinary(8000)"
+		tstr = "varbinary(max)"
 		def = "''"
 	default:
 	}
@@ -317,8 +326,12 @@ func CreateTable(d interface{}, db *DBMysql) (bool, *SType) {
 			buffer.WriteString(name)
 			buffer.WriteString("` ")
 			buffer.WriteString(ty)
-			buffer.WriteString(" NOT NULL DEFAULT ")
-			buffer.WriteString(def)
+			if "text" == ty {
+				buffer.WriteString(" NOT NULL ")
+			} else {
+				buffer.WriteString(" NOT NULL DEFAULT ")
+				buffer.WriteString(def)
+			}
 			buffer.WriteString(",")
 
 			st.Data[name] = ty

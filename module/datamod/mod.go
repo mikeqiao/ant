@@ -1,4 +1,4 @@
-package mod
+package datamod
 
 import (
 	"sync"
@@ -7,15 +7,23 @@ import (
 	"github.com/mikeqiao/ant/group"
 )
 
+type InitData func() bool
+
 type DataMod struct {
-	Dlist    map[interface{}]Data
-	mutex    sync.Mutex // 锁
-	closeSig chan bool
+	Dlist      map[interface{}]Data
+	mutex      sync.Mutex // 锁
+	InitHandle InitData
+	do         bool
+	closeSig   chan bool
 }
 
-func (d *DataMod) Init() {
+func (d *DataMod) Init(h InitData) {
+	d.InitHandle = h
+	d.do = true
 	d.Dlist = make(map[interface{}]Data)
 	d.closeSig = make(chan bool, 1)
+
+	d.Start()
 }
 
 func (d *DataMod) Start() {
@@ -81,6 +89,11 @@ Loop:
 }
 
 func (d *DataMod) Update() {
+	if d.do && nil != d.InitHandle {
+		if d.InitHandle() {
+			d.do = false
+		}
+	}
 	for _, v := range d.Dlist {
 		if nil != v {
 			v.Update()

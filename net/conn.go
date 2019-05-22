@@ -7,6 +7,16 @@ import (
 	"github.com/mikeqiao/ant/log"
 )
 
+type Conn interface {
+	ReadMsg() ([]byte, error)
+	WriteMsg(args ...[]byte) error
+	LocalAddr() net.Addr
+	RemoteAddr() net.Addr
+	Close()
+	Destroy()
+	GetForwardMsg(args ...[]byte) ([]byte, error)
+}
+
 type ConnList map[net.Conn]struct{}
 
 type TCPConn struct {

@@ -20,6 +20,7 @@ type Server struct {
 type CallInfo struct {
 	Mid     int64 //module uid
 	Fid     uint32
+	Did     uint32        //执行id(转发功能使用)
 	f       interface{}   //执行function
 	Cb      interface{}   //callback
 	Args    interface{}   //参数
@@ -68,6 +69,7 @@ func (s *Server) Close() {
 
 func (s *Server) Exec(ci *CallInfo) {
 	if nil == ci {
+		log.Error("nil call")
 		return
 	}
 	defer func() {
@@ -87,6 +89,7 @@ func (s *Server) Exec(ci *CallInfo) {
 		f(ci)
 	} else if nil != ci.Cb {
 		s.ret(ci, &Return{err: fmt.Errorf("err func format")})
+		log.Error("err func format")
 	}
 }
 

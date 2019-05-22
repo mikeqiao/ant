@@ -67,7 +67,7 @@ func (m *ModuleManager) RegisterMod(mod *Module) {
 		log.Debug("already have this mod:%v", mod)
 	} else {
 		m.ml[mod.mid] = mod
-		log.Debug("add mod:%v", mod)
+		//	log.Debug("add mod:%v", mod)
 	}
 	m.mutex.Unlock()
 }
@@ -133,10 +133,10 @@ func (m *ModuleManager) GetModule(uid int64) *Module {
 	return nil
 }
 
-func Route(mid int64, id uint32, cb interface{}, in interface{}, data *net.UserData) {
+func Route(mid int64, fid, did uint32, cb interface{}, in interface{}, data *net.UserData) {
 	m := ModuleControl.GetModule(mid)
 	if nil != m {
-		m.Route(id, cb, in, data)
+		m.Route(fid, did, cb, in, data)
 	} else {
 		log.Error("not have this mod id :%v", mid)
 		ExecCb(cb)

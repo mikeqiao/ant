@@ -2,6 +2,7 @@ package network
 
 import (
 	"sync"
+	"time"
 
 	conf "github.com/mikeqiao/ant/config"
 	"github.com/mikeqiao/ant/group"
@@ -25,9 +26,15 @@ type NetServer struct {
 	// tcp
 	LenMsgLen    int //消息长度字段占用字节数
 	LittleEndian bool
+
+	//websocket
+	HTTPTimeout time.Duration
+	CertFile    string
+	KeyFile     string
+
 	//	clients   []*network.TCPClient
 	tcpServer *net.TCPServer
-	//	wsServer *network.WSServer
+	wsServer  *net.WSServer
 }
 
 func (this *NetServer) Run() {
@@ -61,41 +68,36 @@ func (this *NetServer) runTcp() {
 }
 
 func (this *NetServer) runWebsocket() {
-	/*	if this.ListenAddr != "" {
-			this.wsServer = new(network.WSServer)
-			this.wsServer.Name = this.Name
-			this.wsServer.Addr = this.ListenAddr
-			this.wsServer.MaxConnNum = this.MaxConnNum
-			this.wsServer.PendingWriteNum = this.PendingWriteNum
-			this.wsServer.MaxMsgLen = this.MaxMsgLen
-			this.wsServer.HTTPTimeout = this.HTTPTimeout
-			this.wsServer.CertFile = this.CertFile
-			this.wsServer.KeyFile = this.KeyFile
-			this.wsServer.Processor = this.Processor
-			this.wsServer.NewAgent = network.NewAgentWeb
+	if this.ListenAddr != "" {
+		this.wsServer = new(net.WSServer)
+		this.wsServer.Name = this.Name
+		this.wsServer.Addr = this.ListenAddr
+		this.wsServer.MaxConnNum = this.MaxConnNum
+		this.wsServer.PendingWriteNum = this.PendingWriteNum
+		this.wsServer.MaxMsgLen = this.MaxMsgLen
+		this.wsServer.HTTPTimeout = this.HTTPTimeout
+		this.wsServer.CertFile = this.CertFile
+		this.wsServer.KeyFile = this.KeyFile
+		this.wsServer.Processor = this.Processor
+		this.wsServer.NewAgent = net.NewAgentWeb
 
-		}
-		if this.wsServer != nil {
-			log.Debug("server.ListenAddr: %s", this.ListenAddr)
-			this.wsServer.Start()
-		}
-
-		<-closeSig
-		if this.wsServer != nil {
-			this.wsServer.Close()
-		}
-	*/
+	}
+	if this.wsServer != nil {
+		log.Debug("server.ListenAddr: %s", this.ListenAddr)
+		this.wsServer.Start()
+		group.Done()
+	}
 }
 
 func (this *NetServer) Close() {
 	if this.tcpServer != nil {
 		this.tcpServer.Close()
 	}
-	/*
-		if this.wsServer != nil {
-			this.wsServer.Close()
-		}
-	*/
+
+	if this.wsServer != nil {
+		this.wsServer.Close()
+	}
+
 }
 
 type SeverManager struct {
@@ -123,10 +125,23 @@ func (s *SeverManager) AddData(d *NetServer) {
 func (s *SeverManager) DelData(id int64) {
 	s.lock.Lock()
 	if v, ok := s.Sl[id]; ok {
-		v.Close()
+		if nil != v {
+			v.Close()
+		}
 		delete(s.Sl, id)
 	} else {
 		log.Debug("server not have, data:%v", id)
+	}
+	s.lock.Unlock()
+}
+
+func (s *SeverManager) Close() {
+	s.lock.Lock()
+	for k, v := range s.Sl {
+		if nil != v {
+			v.Close()
+		}
+		delete(s.Sl, k)
 	}
 	s.lock.Unlock()
 }
@@ -150,6 +165,9 @@ func startServer() {
 		server.ListenAddr = c.ListenAddr //"192.168.31.222:6001"
 		server.Pid = c.Pid
 		server.Version = c.Version
+		server.HTTPTimeout = 10 * time.Second
+		server.CertFile = c.CertFile
+		server.KeyFile = c.KeyFile
 		if P != nil {
 			v := P.GetData(server.Pid)
 			if nil != v {
@@ -162,7 +180,13 @@ func startServer() {
 			log.Fatal("P is nil")
 		}
 		group.Add(1)
-		SM.AddData(server)
 		go server.Run()
+		if nil != SM {
+			SM.AddData(server)
+		}
 	}
+}
+
+func closeServer() {
+	SM.Close()
 }

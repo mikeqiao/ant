@@ -19,8 +19,9 @@ type UserData struct {
 }
 
 type TcpAgent struct {
-	UId       int64
-	conn      *TCPConn
+	LUId      int64 //本端local uid
+	RUId      int64 //对方端remote uid
+	conn      Conn
 	Processor Processor
 	lifetime  int64          //链接未验证有效期时间（秒）
 	starttime int64          //链接开始的时间戳
@@ -32,13 +33,13 @@ type TcpAgent struct {
 	wg        sync.WaitGroup // 链接wait
 	userData  interface{}
 	Version   int32
-	SUID      int64
+	Type      int32
 }
 
 func NewAgent(conn *TCPConn, tp Processor) *TcpAgent {
 	a := new(TcpAgent)
 	CreatID += 1
-	a.UId = CreatID
+	a.RUId = CreatID
 	a.conn = conn
 	a.Processor = tp
 	a.lifetime = 10
@@ -47,11 +48,32 @@ func NewAgent(conn *TCPConn, tp Processor) *TcpAgent {
 	a.islogin = false
 	a.isClose = false
 	a.isUpdate = true
+	a.Type = 1
 	return a
 }
 
-func (a *TcpAgent) SetUID(uid int64) {
-	a.UId = uid
+func NewAgentWeb(conn *WSConn, tp Processor) *TcpAgent {
+	a := new(TcpAgent)
+	CreatID += 1
+	a.RUId = CreatID
+	a.conn = conn
+	a.Processor = tp
+	a.lifetime = 10
+	a.starttime = time.Now().Unix()
+	a.tick = time.Now().Unix()
+	a.islogin = false
+	a.isClose = false
+	a.isUpdate = false
+	a.Type = 2
+	return a
+}
+
+func (a *TcpAgent) SetLocalUID(uid int64) {
+	a.LUId = uid
+}
+
+func (a *TcpAgent) SetRemotUID(uid int64) {
+	a.RUId = uid
 }
 
 func (a *TcpAgent) Start(name string) {
@@ -60,11 +82,11 @@ func (a *TcpAgent) Start(name string) {
 		return
 	}
 	msg := &proto.NewConnect{
-		Id: a.UId,
+		Id: a.RUId,
 	}
 	ta := &UserData{
 		Agent: a,
-		UId:   a.UId,
+		UId:   a.RUId,
 	}
 	err := a.Processor.Route(msgtype.NewConnect, msg, ta)
 	if err != nil {
@@ -84,8 +106,7 @@ func (a *TcpAgent) Run() {
 		data, err := a.conn.ReadMsg()
 		if err != nil {
 			log.Debug("read message: %v", err)
-			a.Close()
-			break
+			goto Loop
 		}
 		if a.Processor != nil {
 			id, msg, err := a.Processor.Unmarshal(data)
@@ -95,7 +116,7 @@ func (a *TcpAgent) Run() {
 			if msg != nil {
 				ta := &UserData{
 					Agent: a,
-					UId:   a.UId,
+					UId:   a.RUId,
 				}
 				err = a.Processor.Route(id, msg, ta)
 				if err != nil {
@@ -104,6 +125,7 @@ func (a *TcpAgent) Run() {
 			}
 		}
 	}
+Loop:
 	a.isClose = true
 }
 
@@ -115,7 +137,6 @@ func (a *TcpAgent) Update() {
 		case <-t1.C:
 			if a.isClose == true {
 				log.Debug("agent closed")
-				a.Close()
 				goto Loop
 			}
 
@@ -123,14 +144,12 @@ func (a *TcpAgent) Update() {
 				nowtime := time.Now().Unix()
 				if (a.starttime + a.lifetime) < nowtime {
 					log.Debug("outtime to not login: %v", a.conn.RemoteAddr())
-					a.Close()
 					goto Loop
 				}
 			} else {
 				nowtime := time.Now().Unix()
 				if (a.tick + a.lifetime*3) < nowtime {
 					log.Debug("outtime to no tick: %v", a.conn.RemoteAddr())
-					a.Close()
 					goto Loop
 				}
 			}
@@ -148,6 +167,7 @@ func (a *TcpAgent) Update() {
 	}
 Loop:
 	a.wg.Done()
+	a.Close()
 }
 
 func (a *TcpAgent) IsClose() bool {
@@ -196,18 +216,18 @@ func (a *TcpAgent) Close() {
 	var id uint16
 	if a.ctype == 2 {
 		msg = &proto.DelConnect{
-			Id: a.UId,
+			Id: a.RUId,
 		}
 		id = msgtype.DelConnect
 	} else {
 		msg = &proto.ServerDelConnect{
-			Id: a.UId,
+			Id: a.RUId,
 		}
 		id = msgtype.ServerDelConnect
 	}
 	ta := &UserData{
 		Agent: a,
-		UId:   a.UId,
+		UId:   a.RUId,
 	}
 	err := a.Processor.Route(id, msg, ta)
 	if err != nil {

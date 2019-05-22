@@ -64,6 +64,11 @@ type ClientConfig struct {
 	MaxMsgLen       uint32
 	Processortype   int //消息编码类型 1 protobuf        2 json
 	ConnAddr        string
+
+	//websocket
+	CertFile string
+	KeyFile  string
+
 	// tcp
 	LenMsgLen int   //消息长度字段占用字节数
 	Pid       int32 //processor ID
@@ -82,6 +87,9 @@ type ServerConfig struct {
 	LenMsgLen       int    //消息长度字段占用字节数
 	Pid             int32  //processor ID
 	Version         int32
+	//websocket
+	CertFile string
+	KeyFile  string
 }
 
 func SetServerConf(s_conf ...ServerConfig) {

@@ -19,20 +19,21 @@ func HandleDBRQ(call *rpc.CallInfo) {
 
 	data := call.Data
 	var res interface{}
-	if nil != data && nil != data.Agent && nil != data.Agent.Processor {
+	if nil != data && nil != data.Agent && nil != data.Agent.Processor && msgid > 0 {
 		res = data.Agent.Processor.GetMsg(uint16(msgid))
 	}
 
-	var ok bool
+	log.Debug("call:%v", call)
+	var id int64
 	var err error
 	if nil != DB && nil != DB.DB {
 		switch t {
 		case DB_insert:
-			ok = DB.DB.InsertData(sql)
+			id = DB.DB.InsertData(sql)
 		case DB_del:
-			ok = DB.DB.DeleteData(sql)
+			id = DB.DB.DeleteData(sql)
 		case DB_update:
-			ok = DB.DB.UpdateData(sql)
+			id = DB.DB.UpdateData(sql)
 		case DB_select:
 			err = DB.DB.SelectData(sql, keys, res)
 		case DB_select_all:
@@ -41,18 +42,18 @@ func HandleDBRQ(call *rpc.CallInfo) {
 	} else {
 		err = fmt.Errorf("DB is nil")
 	}
-	if msgid > 0 {
+	if msgid <= 0 {
 		cb := new(proto.DBServerRS)
-		if ok {
+		if id > 0 {
 			cb.Result = 0
 		} else {
 			cb.Result = 1
 		}
-		call.SetResult(res, nil)
+		call.SetResult(cb, nil)
 	} else {
 		call.SetResult(res, err)
 	}
 	//	计算得出结果
-	log.Debug("id:%v, ok:%v, err:%v", msgid, ok, err)
+	log.Debug("id:%v,count:%v, err:%v", msgid, id, err)
 
 }

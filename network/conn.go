@@ -43,7 +43,7 @@ func (this *ConnManager) AddUserConn(id int64, uid int64) bool {
 		}
 		this.userConn[uid] = v
 		this.userConn[uid].SetLogin()
-		this.userConn[uid].SetUID(uid)
+		this.userConn[uid].SetRemotUID(uid)
 
 	} else {
 		log.Debug("no this userNewConn, id:%v", id)
@@ -144,10 +144,16 @@ Loop:
 func (this *ConnManager) Close() {
 	this.isClose = true
 	this.mutexConns.Lock()
-	for k, _ := range this.userConn {
+	for k, v := range this.userConn {
+		if nil != v {
+			v.Close()
+		}
 		delete(this.userConn, k)
 	}
-	for k, _ := range this.userNewConn {
+	for k, v := range this.userNewConn {
+		if nil != v {
+			v.Close()
+		}
 		delete(this.userNewConn, k)
 	}
 	this.mutexConns.Unlock()
@@ -217,4 +223,8 @@ func (this *ConnManager) ForwardDBMsg(id, uid int64, rtype int32, column string,
 
 func startManager() {
 	CM.Run()
+}
+
+func closeManager() {
+	CM.Close()
 }

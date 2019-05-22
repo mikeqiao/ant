@@ -41,15 +41,17 @@ func (c *Client) call(ci *CallInfo) (err error) {
 	return
 }
 
-func (c *Client) GetFunc(id uint32) (f interface{}, err error) {
+func (c *Client) GetFunc(id uint32) (fc interface{}, err error) {
 
 	if nil == c.s {
 		err = fmt.Errorf("rpc server is nil")
+		log.Error("err:%v", err)
 		return
 	}
-	fc := c.s.functions[id]
+	fc = c.s.functions[id]
 	if fc == nil {
 		err = fmt.Errorf("function id %v: function not registered", id)
+		log.Error("err:%v", err)
 	}
 	return
 }
@@ -61,21 +63,24 @@ func NewClient(l int32, s *Server) *Client {
 }
 
 //模块间异步调用
-func (c *Client) CallAsyn(mid int64, id uint32, cb interface{}, in interface{}, data *net.UserData) {
+func (c *Client) CallAsyn(mid int64, fid, did uint32, cb interface{}, in interface{}, data *net.UserData) {
 	// too many calls
 	if c.pendingAsynCall >= cap(c.ChanAsynRet) && nil != cb {
 		execCb(&Return{err: errors.New("too many calls"), cb: cb})
 		return
 	}
-	f, err := c.GetFunc(id)
-	if err != nil && nil != cb {
-		log.Debug("err func id:%v", id)
-		c.ChanAsynRet <- &Return{err: err, cb: cb}
+	f, err := c.GetFunc(did)
+	if err != nil {
+		log.Debug("err  do id:%v, func id:%v", did, fid)
+		if nil != cb {
+			c.ChanAsynRet <- &Return{err: err, cb: cb}
+		}
 		return
 	}
 	err = c.call(&CallInfo{
 		Mid:     mid,
-		Fid:     id,
+		Fid:     fid,
+		Did:     did,
 		f:       f,
 		Args:    in,
 		Data:    data,

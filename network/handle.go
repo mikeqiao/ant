@@ -65,7 +65,7 @@ func HandleServerLoginRQ(msg interface{}, data *net.UserData) {
 	data.Agent.WriteMsg(&proto.ServerLoginRS{
 		Result: 0,
 		Serverinfo: &proto.ServerInfo{
-			ServerId:      data.Agent.SUID,
+			ServerId:      data.Agent.LUId,
 			ServerVersion: data.Agent.Version,
 			State:         1,
 		},
@@ -91,7 +91,7 @@ func HandleServerLoginRS(msg interface{}, data *net.UserData) {
 	}
 	module = mod.NewModule(uid, s.GetState(), s.GetServerVersion(), 0)
 	module.SetAgent(data.Agent)
-	module.SendFunc(1)
+	module.SendFunc(1, data.Agent.LUId)
 }
 
 func HandleServerRegister(msg interface{}, data *net.UserData) {
@@ -120,6 +120,7 @@ func HandleServerRegister(msg interface{}, data *net.UserData) {
 					FromMId: c.Mid,
 					ToMId:   c.Mid,
 					FUId:    c.Fid,
+					DUId:    c.Did,
 					CUId:    key,
 					Msginfo: tdata[:],
 					User:    u,
@@ -133,10 +134,11 @@ func HandleServerRegister(msg interface{}, data *net.UserData) {
 	}
 	for _, v := range m.GetFuid() {
 		module.RegisterRemote(v, f)
+		log.Debug(" module uid:%v, add func fid:%v", uid, v)
 	}
 	module.Start()
 	if 1 == m.GetType() {
-		module.SendFunc(2)
+		module.SendFunc(2, data.Agent.LUId)
 	}
 }
 
@@ -164,6 +166,9 @@ func HandleServerCall(msg interface{}, data *net.UserData) {
 	}
 	fid := m.GetFUId()
 	Cid := m.GetCUId()
+	did := m.GetDUId()
+
+	log.Debug(" fid:%v, cid:%v, did:%v", fid, Cid, did)
 	//data
 	msgData := info[lenMsgLen:]
 	if data.Agent.Processor != nil {
@@ -198,9 +203,9 @@ func HandleServerCall(msg interface{}, data *net.UserData) {
 					}
 				}
 			}
-			mod.RPC.Route(fid, cb, msg, data)
+			mod.RPC.Route(fid, did, cb, msg, data)
 		} else {
-			mod.RPC.Route(fid, nil, msg, data)
+			mod.RPC.Route(fid, did, nil, msg, data)
 		}
 	}
 

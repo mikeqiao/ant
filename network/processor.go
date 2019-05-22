@@ -51,5 +51,7 @@ func Run() {
 }
 
 func Close() {
-
+	closeClient()
+	closeServer()
+	closeManager()
 }

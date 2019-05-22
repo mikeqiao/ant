@@ -85,12 +85,14 @@ func (this *TCPClient) connect() {
 reconnect:
 	conn := this.dial()
 	if conn == nil {
+		log.Error("conn is nil")
 		return
 	}
 	this.Lock()
 	if this.closeFlag {
 		this.Unlock()
 		conn.Close()
+		log.Debug("this is close")
 		return
 	}
 	this.conns[conn] = struct{}{}
@@ -98,7 +100,7 @@ reconnect:
 	tcpConn := newTCPConn(conn, this.PendingWriteNum, this.msgParser)
 	agent := this.NewAgent(tcpConn, this.Processor)
 	this.Agent = agent
-
+	agent.SetLocalUID(this.UId)
 	agent.WriteMsg(&proto.ServerLoginRQ{
 		Serverinfo: &proto.ServerInfo{
 			ServerId:      this.UId,
@@ -107,16 +109,15 @@ reconnect:
 		},
 	})
 	agent.Run()
-
 	//cleanup
 	tcpConn.Close()
 	this.Lock()
 	delete(this.conns, conn)
 	this.Unlock()
 	agent.Close()
-
 	if this.AutoReconnect {
 		time.Sleep(this.ConnectInterval)
+		log.Debug("agent reconnect")
 		goto reconnect
 	}
 }

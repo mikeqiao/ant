@@ -2,12 +2,16 @@ package redis
 
 import (
 	"fmt"
+	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
 	conf "github.com/mikeqiao/ant/config"
 	"github.com/mikeqiao/ant/log"
 )
+
+type HandleData func(d string)
 
 type CRedis struct {
 	Pool *redis.Pool
@@ -54,7 +58,7 @@ func (r *CRedis) DelTable(table string) {
 	c := r.Pool.Get()
 	_, err := c.Do("del", table)
 	if nil != err {
-		log.Debug("table:%v, error:%v", table, err)
+		log.Error("table:%v, error:%v", table, err)
 	}
 	c.Close()
 }
@@ -64,18 +68,37 @@ func (r *CRedis) SetTableLifetime(table string, lifetime int32) error {
 	if lifetime > 0 {
 		_, err := c.Do("EXPIRE", table, lifetime)
 		if nil != err {
-			log.Debug("error table:%v", table)
+			log.Error("error table:%v", table)
 		}
 		c.Close()
 		return err
 	} else {
 		_, err := c.Do("persist", table)
 		if nil != err {
-			log.Debug("error table:%v", table)
+			log.Error("error table:%v", table)
 		}
 		c.Close()
 		return err
 	}
+}
+
+func (r *CRedis) SubChannel(name string, h HandleData) {
+	c := r.Pool.Get()
+	psc := redis.PubSubConn{c}
+	psc.PSubscribe(name)
+	for {
+		switch v := psc.Receive().(type) {
+		case redis.Subscription:
+		//	fmt.Printf("%s: %s %d\n", v.Channel, v.Kind, v.Count)
+		case redis.Message: //单个订阅subscribe
+			h(string(v.Data))
+		case error:
+			c.Close()
+			return
+		}
+
+	}
+	c.Close()
 }
 
 //string
@@ -89,7 +112,7 @@ func (r *CRedis) String_SetData(table, value string) error {
 	return err
 }
 
-func (r *CRedis) StringSetDataMap(data map[string]string) error {
+func (r *CRedis) String_SetDataMap(data map[string]string) error {
 	c := r.Pool.Get()
 	args := make([]interface{}, len(data)*2)
 	i := 0
@@ -106,7 +129,7 @@ func (r *CRedis) StringSetDataMap(data map[string]string) error {
 	return err
 }
 
-func (r *CRedis) StringGetData(table string) (string, error) {
+func (r *CRedis) String_GetData(table string) (string, error) {
 	c := r.Pool.Get()
 	value, err := redis.String(c.Do("get", table))
 	if nil != err {
@@ -116,7 +139,7 @@ func (r *CRedis) StringGetData(table string) (string, error) {
 	return value, err
 }
 
-func (r *CRedis) StringGetDataMap(table []string) (map[string]string, error) {
+func (r *CRedis) String_GetDataMap(table []string) (map[string]string, error) {
 	c := r.Pool.Get()
 	args := make([]interface{}, len(table))
 	for k, v := range table {
@@ -134,6 +157,28 @@ func (r *CRedis) StringGetDataMap(table []string) (map[string]string, error) {
 	}
 	c.Close()
 	return values, err
+}
+
+func (r *CRedis) IncrData(table string) int64 {
+	c := r.Pool.Get()
+	value, err := redis.Int64(c.Do("INCR", table))
+	c.Close()
+	if nil != err {
+		log.Error("error table:%v", table)
+		return 0
+	}
+	return value
+}
+
+func (r *CRedis) DecrData(table string) int64 {
+	c := r.Pool.Get()
+	value, err := redis.Int64(c.Do("DECR", table))
+	c.Close()
+	if nil != err {
+		log.Error("error table:%v", table)
+		return 0
+	}
+	return value
 }
 
 //hash
@@ -263,6 +308,41 @@ func (r *CRedis) Hash_GetAllData(table string) (map[string]string, error) {
 	}
 	c.Close()
 	return m, err
+}
+
+func (r *CRedis) Hash_GetData(table string, keys []string, data interface{}) bool {
+	vt := reflect.ValueOf(data)
+	if vt.IsNil() {
+		log.Debug("err value:%v", data)
+		return false
+	}
+	res, err := r.Hash_GetDataMap(table, keys)
+	if nil != err {
+		return false
+	} else {
+		for k, v := range res {
+			name := vt.Elem().FieldByName(k).Type().Name()
+			var value interface{}
+			switch name {
+			case "int32":
+				a, _ := strconv.Atoi(v)
+				value = int32(a)
+				break
+			case "int64":
+				value, _ = strconv.ParseInt(v, 10, 64)
+				break
+			case "string":
+				value = v
+				break
+			case "float64":
+				value, _ = strconv.ParseFloat(v, 64)
+				break
+			}
+
+			vt.Elem().FieldByName(k).Set(reflect.ValueOf(value))
+		}
+	}
+	return true
 }
 
 //sorted set

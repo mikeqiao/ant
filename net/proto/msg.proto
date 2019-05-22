@@ -70,8 +70,9 @@ message ServerCall
 	int64	fromMId = 2; //请求者（模块id）
 	int64	toMId = 3; //接受者（模块id）
 	uint32	fUId = 4; //目标 function id
-	string	cUId = 5; //回调 callback id
-	bytes   msginfo = 6;// 参数
+	uint32  dUId = 5; //执行的uid （转发）
+	string	cUId = 6; //回调 callback id
+	bytes   msginfo = 7;// 参数
 }
 
 message ServerCallBack

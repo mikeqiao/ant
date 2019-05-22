@@ -63,33 +63,34 @@ func (d *DBMysql) Exec(sqlstr string) bool {
 	return true
 }
 
-func (d *DBMysql) InsertData(sqlstr string) bool {
+func (d *DBMysql) InsertData(sqlstr string) int64 {
 	res, err := d.DB.Exec(sqlstr)
 	if err != nil {
 		log.Error("Exec fail sql:%v", sqlstr)
-		return false
+		return 0
 	}
-	id, terr := res.LastInsertId()
-	log.Debug("%v, %v", id, terr)
-	return true
+	id, _ := res.LastInsertId()
+	return id
 }
 
-func (d *DBMysql) DeleteData(sqlstr string) bool {
-	_, err := d.DB.Exec(sqlstr)
+func (d *DBMysql) DeleteData(sqlstr string) int64 {
+	res, err := d.DB.Exec(sqlstr)
 	if err != nil {
 		log.Error("Exec fail sql:%v", sqlstr)
-		return false
+		return 0
 	}
-	return true
+	count, _ := res.RowsAffected()
+	return count
 }
 
-func (d *DBMysql) UpdateData(sqlstr string) bool {
-	_, err := d.DB.Exec(sqlstr)
+func (d *DBMysql) UpdateData(sqlstr string) int64 {
+	res, err := d.DB.Exec(sqlstr)
 	if err != nil {
 		log.Error("Exec fail sql:%v", sqlstr)
-		return false
+		return 0
 	}
-	return true
+	count, _ := res.RowsAffected()
+	return count
 }
 
 func (d *DBMysql) SelectData(sqlstr string, k []string, res interface{}) error {

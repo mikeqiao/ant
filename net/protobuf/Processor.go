@@ -59,7 +59,7 @@ func (p *Processor) baseMsg() {
 	p.Register(&msg.DBServerRS{}, msgtype.DBServerRS)
 
 	p.SetHandler(msgtype.NewConnect, network.HandleNewConnect)
-	p.SetHandler(msgtype.DelConnect, network.HandleDelConnect)
+	//	p.SetHandler(msgtype.DelConnect, network.HandleDelConnect)
 	p.SetHandler(msgtype.ServerDelConnect, network.HandleServerDelConnect)
 	p.SetHandler(msgtype.ServerTick, network.HandleServerTick)
 	p.SetHandler(msgtype.ServerLoginRQ, network.HandleServerLoginRQ)
@@ -130,9 +130,9 @@ func (p *Processor) Route(id uint16, msg interface{}, data *net.UserData) error 
 					data.Agent.WriteMsg(in)
 				}
 			}
-			mod.RPC.Route(i.fid, cb, msg, data)
+			mod.RPC.Route(i.fid, i.fid, cb, msg, data)
 		} else {
-			return fmt.Errorf(" msgid:%v, mod is nil :%v", id, i)
+			return fmt.Errorf(" msgid:%v, handler is nil :%v", id, i)
 		}
 	}
 	return nil
