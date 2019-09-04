@@ -38,7 +38,7 @@ func NewModule(id, state int64, version, start int32) *Module {
 	m.v = version
 	m.state = start
 	m.working = false
-	m.chanlen = 100
+	m.chanlen = 1024
 	m.Init()
 	ModuleControl.RegisterMod(m)
 	return m
@@ -134,6 +134,8 @@ func (m *Module) Route(fid, did uint32, cb interface{}, in interface{}, data *ne
 	} else {
 		log.Error("client not working")
 	}
+
+	//	log.Debug(" end find call time:%v", time.Now().String())
 }
 
 func (m *Module) DelFunc(id uint32) {
@@ -189,8 +191,8 @@ func (m *Module) SendFunc(t int32, uid int64) {
 
 func (m *Module) AddWaitCall(c *rpc.CallInfo) (key string) {
 	if nil != c && nil != c.Cb {
-		m.lock.Lock()
 		key = fmt.Sprintf("%p", c)
+		m.lock.Lock()
 		m.waitback[key] = c
 		m.lock.Unlock()
 	}
@@ -198,12 +200,15 @@ func (m *Module) AddWaitCall(c *rpc.CallInfo) (key string) {
 }
 
 func (m *Module) ExecBack(key string, msg interface{}, e error) {
+
 	m.lock.Lock()
 	c, ok := m.waitback[key]
 	if ok {
 		delete(m.waitback, key)
 	}
 	m.lock.Unlock()
+
+	//	log.Debug(" end find  callback time:%v", time.Now().String())
 	if nil != c {
 		c.SetResult(msg, e)
 	}

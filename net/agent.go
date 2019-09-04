@@ -23,11 +23,12 @@ type TcpAgent struct {
 	RUId      int64 //对方端remote uid
 	conn      Conn
 	Processor Processor
-	lifetime  int64          //链接未验证有效期时间（秒）
-	starttime int64          //链接开始的时间戳
-	tick      int64          //上次心跳的时间戳
-	islogin   bool           //是否登陆验证过
-	isClose   bool           //是否关闭
+	lifetime  int64 //链接未验证有效期时间（秒）
+	starttime int64 //链接开始的时间戳
+	tick      int64 //上次心跳的时间戳
+	islogin   bool  //是否登陆验证过
+	isClose   bool  //是否关闭
+	Closed    bool
 	isUpdate  bool           //是否验证心跳
 	ctype     int32          //连接类型 1 server  2 client
 	wg        sync.WaitGroup // 链接wait
@@ -49,6 +50,7 @@ func NewAgent(conn *TCPConn, tp Processor) *TcpAgent {
 	a.isClose = false
 	a.isUpdate = true
 	a.Type = 1
+	a.Closed = false
 	return a
 }
 
@@ -65,6 +67,7 @@ func NewAgentWeb(conn *WSConn, tp Processor) *TcpAgent {
 	a.isClose = false
 	a.isUpdate = false
 	a.Type = 2
+	a.Closed = false
 	return a
 }
 
@@ -105,7 +108,7 @@ func (a *TcpAgent) Run() {
 	for {
 		data, err := a.conn.ReadMsg()
 		if err != nil {
-			log.Debug("read message: %v", err)
+			log.Error("agent:localUID:%v, RemoteUID:%v, ,read message err: %v", a.LUId, a.RUId, err)
 			goto Loop
 		}
 		if a.Processor != nil {
@@ -127,6 +130,9 @@ func (a *TcpAgent) Run() {
 	}
 Loop:
 	a.isClose = true
+	if a.isUpdate != true {
+		a.Close()
+	}
 }
 
 func (a *TcpAgent) Update() {
@@ -212,6 +218,10 @@ func (a *TcpAgent) RemoteAddr() net.Addr {
 }
 
 func (a *TcpAgent) Close() {
+	if a.Closed {
+		return
+	}
+	a.Closed = true
 	var msg interface{}
 	var id uint16
 	if a.ctype == 2 {
@@ -234,6 +244,16 @@ func (a *TcpAgent) Close() {
 		log.Debug("Agent error: %v", err)
 
 	}
+	a.conn.Close()
+	a.isClose = true
+	a.wg.Wait()
+}
+
+func (a *TcpAgent) OnlyClose() {
+	if a.Closed {
+		return
+	}
+	a.Closed = true
 	a.conn.Close()
 	a.isClose = true
 	a.wg.Wait()

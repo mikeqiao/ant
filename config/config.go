@@ -30,6 +30,8 @@ var Config struct {
 	Dbconfig DBConfig
 
 	Redisconfig RedisConfig
+
+	HttpServer string
 }
 
 type DBConfig struct {

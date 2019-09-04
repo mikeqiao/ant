@@ -57,7 +57,7 @@ func (d *DBMysql) OnClose() {
 func (d *DBMysql) Exec(sqlstr string) bool {
 	_, err := d.DB.Exec(sqlstr)
 	if err != nil {
-		log.Error("Exec fail sql:%v", sqlstr)
+		log.Error("Exec fail sql:%v, err:%v", sqlstr, err)
 		return false
 	}
 	return true
@@ -66,7 +66,7 @@ func (d *DBMysql) Exec(sqlstr string) bool {
 func (d *DBMysql) InsertData(sqlstr string) int64 {
 	res, err := d.DB.Exec(sqlstr)
 	if err != nil {
-		log.Error("Exec fail sql:%v", sqlstr)
+		log.Error("Exec fail sql:%v, err:%v", sqlstr, err)
 		return 0
 	}
 	id, _ := res.LastInsertId()
@@ -76,19 +76,21 @@ func (d *DBMysql) InsertData(sqlstr string) int64 {
 func (d *DBMysql) DeleteData(sqlstr string) int64 {
 	res, err := d.DB.Exec(sqlstr)
 	if err != nil {
-		log.Error("Exec fail sql:%v", sqlstr)
+		log.Error("Exec fail sql:%v, err:%v", sqlstr, err)
 		return 0
 	}
 	count, _ := res.RowsAffected()
+
 	return count
 }
 
 func (d *DBMysql) UpdateData(sqlstr string) int64 {
 	res, err := d.DB.Exec(sqlstr)
 	if err != nil {
-		log.Error("Exec fail sql:%v", sqlstr)
+		log.Error("Exec fail sql:%v, err:%v", sqlstr, err)
 		return 0
 	}
+	//res.LastInsertId()
 	count, _ := res.RowsAffected()
 	return count
 }
@@ -111,6 +113,17 @@ func (d *DBMysql) SelectData(sqlstr string, k []string, res interface{}) error {
 		log.Error("SelectData err:%v, sql:%v", err, sqlstr)
 	}
 	return err
+}
+
+func (d *DBMysql) SelectIfHave(sqlstr string) bool {
+
+	rows, err := d.DB.Query(sqlstr)
+	if err != nil {
+		log.Error("SelectData err:%v, sql:%v", err, sqlstr)
+		return false
+	}
+	return rows.Next()
+
 }
 
 func (d *DBMysql) SelectAllData(sqlstr string, b []string, res interface{}) (err error) {
@@ -159,7 +172,7 @@ func (d *DBMysql) SelectAllData(sqlstr string, b []string, res interface{}) (err
 
 func (d *DBMysql) HasTable(table string) bool {
 	//开启事务
-	sqlstr := "SELECT count(*) FROM INFORMATION_SCHEMA.tables WHERE table_name = '" + table + "'"
+	sqlstr := "SELECT count(*) FROM INFORMATION_SCHEMA.tables WHERE TABLE_SCHEMA=(select database()) and  table_name = '" + table + "'"
 	var count int32
 	err := d.DB.QueryRow(sqlstr).Scan(&count)
 	if err != nil {
@@ -174,7 +187,7 @@ func (d *DBMysql) HasTable(table string) bool {
 func (d *DBMysql) CreateTable(sqlstr string) bool {
 	_, err := d.DB.Exec(sqlstr)
 	if err != nil {
-		log.Error("Exec fail sql:%v", sqlstr)
+		log.Error("Exec fail sql:%v, err:%v", sqlstr, err)
 		return false
 	}
 	return true

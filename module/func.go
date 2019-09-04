@@ -57,6 +57,7 @@ func (r *RServer) DelModule(s *Module) {
 }
 
 func (r *RServer) Route(fid uint32, cb interface{}, in interface{}, data *net.UserData) {
+	//	log.Debug(" start find call time:%v", time.Now().String())
 	did := r.fid
 	var m *Module
 	for k, v := range r.ml {
@@ -69,7 +70,7 @@ func (r *RServer) Route(fid uint32, cb interface{}, in interface{}, data *net.Us
 		}
 	}
 	if nil != m {
-		log.Debug("mod:%v", m)
+//		log.Debug("mod id:%v", m.mid)
 		m.Route(fid, did, cb, in, data)
 	} else {
 		log.Debug("not find working module, fid:%v", did)
@@ -143,11 +144,10 @@ func (r *RPCServer) Route(fid, did uint32, cb interface{}, in interface{}, data 
 	}
 	if v, ok := r.Functions[did]; ok {
 		if nil != v {
-			log.Debug("have did:%v ", did)
+		//	log.Debug("have did:%v ", did)
 			v.Route(fid, cb, in, data)
 		}
 	} else {
-		log.Debug("no did:%v ", did)
 		if fid != HandleForwardMsg {
 			if fv, ok := r.Functions[HandleForwardMsg]; ok && nil != fv && 1 == fv.ftype {
 				fv.Route(fid, cb, in, data)

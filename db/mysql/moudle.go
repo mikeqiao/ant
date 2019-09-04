@@ -217,7 +217,7 @@ func SqlChangeName(table, oldname, newname, dtype string) (sql string) {
 }
 
 func SqlChangeDType(table, name, dtype, def string) (sql string) {
-	if "text" == dtype {
+	if "text" == dtype || "longtext" == dtype {
 		sql = "ALTER TABLE " + table + " MODIFY COLUMN " + name + " " + dtype + " NOT NULL"
 	} else {
 		sql = "ALTER TABLE " + table + " MODIFY COLUMN " + name + " " + dtype + " NOT NULL DEFAULT " + def
@@ -226,7 +226,7 @@ func SqlChangeDType(table, name, dtype, def string) (sql string) {
 }
 
 func SqlAddColumn(table, name, dtype, def string) (sql string) {
-	if "text" == dtype {
+	if "text" == dtype || "longtext" == dtype {
 		sql = "ALTER TABLE " + table + " ADD " + name + " " + dtype + " NOT NULL"
 	} else {
 		sql = "ALTER TABLE " + table + " ADD " + name + " " + dtype + " NOT NULL DEFAULT " + def
@@ -259,6 +259,8 @@ func CheckType(k string, v reflect.Kind) (tstr, def string) {
 			tstr = "varchar(64)"
 		} else if CheckData(k) {
 			tstr = "text"
+		} else if CheckLongData(k) {
+			tstr = "longtext"
 		} else {
 			tstr = "varchar(255)"
 		}
@@ -298,6 +300,13 @@ func CheckData(k string) bool {
 	return false
 }
 
+func CheckLongData(k string) bool {
+	if strings.HasPrefix(k, "LData") {
+		return true
+	}
+	return false
+}
+
 func CreateTable(d interface{}, db *DBMysql) (bool, *SType) {
 	t := reflect.TypeOf(d)
 	if t.Kind() != reflect.Ptr || t.Elem().Kind() == reflect.Ptr {
@@ -326,7 +335,7 @@ func CreateTable(d interface{}, db *DBMysql) (bool, *SType) {
 			buffer.WriteString(name)
 			buffer.WriteString("` ")
 			buffer.WriteString(ty)
-			if "text" == ty {
+			if "text" == ty || "longtext" == ty {
 				buffer.WriteString(" NOT NULL ")
 			} else {
 				buffer.WriteString(" NOT NULL DEFAULT ")

@@ -29,7 +29,9 @@ func (c *Client) Init(l int32, s *Server) {
 
 func (c *Client) CallBack(r *Return) {
 	c.pendingAsynCall--
+	//	log.Debug(" start handle callback time:%v", time.Now().String())
 	execCb(r)
+	//	log.Debug(" end handle callback time:%v", time.Now().String())
 }
 
 func (c *Client) call(ci *CallInfo) (err error) {
@@ -66,6 +68,7 @@ func NewClient(l int32, s *Server) *Client {
 func (c *Client) CallAsyn(mid int64, fid, did uint32, cb interface{}, in interface{}, data *net.UserData) {
 	// too many calls
 	if c.pendingAsynCall >= cap(c.ChanAsynRet) && nil != cb {
+		log.Debug("too mana calls:%v", c.pendingAsynCall, cap(c.ChanAsynRet))
 		execCb(&Return{err: errors.New("too many calls"), cb: cb})
 		return
 	}

@@ -102,7 +102,7 @@ func (server *WSServer) Start() {
 		log.Release("invalid MaxMsgLen, reset to %v", server.MaxMsgLen)
 	}
 	if server.HTTPTimeout <= 0 {
-		server.HTTPTimeout = 10 * time.Second
+		server.HTTPTimeout = 30 * time.Second
 		log.Release("invalid HTTPTimeout, reset to %v", server.HTTPTimeout)
 	}
 	if server.NewAgent == nil {

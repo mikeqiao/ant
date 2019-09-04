@@ -30,6 +30,7 @@ type CallInfo struct {
 }
 
 func (c *CallInfo) SetResult(data interface{}, e error) {
+
 	if c.chanRet == nil || nil == c.Cb {
 		return
 	}
@@ -86,7 +87,9 @@ func (s *Server) Exec(ci *CallInfo) {
 	}()
 	f, ok := ci.f.(func(*CallInfo))
 	if ok {
+		//	log.Debug(" start handle:%v", ci)
 		f(ci)
+		//	log.Debug(" end handle:%v", ci)
 	} else if nil != ci.Cb {
 		s.ret(ci, &Return{err: fmt.Errorf("err func format")})
 		log.Error("err func format")

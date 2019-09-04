@@ -73,7 +73,7 @@ func (d *DataMod) Get(key interface{}) interface{} {
 }
 
 func (d *DataMod) Run() {
-	t1 := time.NewTimer(time.Second * 1)
+	t1 := time.NewTimer(time.Millisecond * 100)
 	for {
 		select {
 		case <-d.closeSig:
@@ -81,7 +81,7 @@ func (d *DataMod) Run() {
 			goto Loop
 		case <-t1.C:
 			d.Update()
-			t1.Reset(time.Second * 1)
+			t1.Reset(time.Millisecond * 100)
 		}
 	}
 Loop:

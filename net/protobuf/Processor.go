@@ -130,6 +130,7 @@ func (p *Processor) Route(id uint16, msg interface{}, data *net.UserData) error 
 					data.Agent.WriteMsg(in)
 				}
 			}
+			log.Debug("fid:%v, did:%v, msg:%v, data:%v", i.fid, i.fid, msg, data)
 			mod.RPC.Route(i.fid, i.fid, cb, msg, data)
 		} else {
 			return fmt.Errorf(" msgid:%v, handler is nil :%v", id, i)

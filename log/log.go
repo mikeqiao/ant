@@ -138,11 +138,10 @@ Loop:
 }
 
 func (l *Logger) ChangeFile() {
-	if l.baseFile != nil {
-		l.baseFile.Close()
-	}
-	l.baseFile = nil
-	l.baseLogger = nil
+	old := l.baseFile
+
+	//	l.baseFile = nil
+	//	l.baseLogger = nil
 
 	if l.pathname != "" {
 		now := time.Now()
@@ -158,6 +157,10 @@ func (l *Logger) ChangeFile() {
 		}
 		l.baseLogger = log.New(file, "", l.flag)
 		l.baseFile = file
+
+		if old != nil {
+			old.Close()
+		}
 	} else {
 		l.baseLogger = log.New(os.Stdout, "", l.flag)
 	}

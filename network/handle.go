@@ -168,7 +168,7 @@ func HandleServerCall(msg interface{}, data *net.UserData) {
 	Cid := m.GetCUId()
 	did := m.GetDUId()
 
-	log.Debug(" fid:%v, cid:%v, did:%v", fid, Cid, did)
+//	log.Debug(" fid:%v, cid:%v, did:%v", fid, Cid, did)
 	//data
 	msgData := info[lenMsgLen:]
 	if data.Agent.Processor != nil {
@@ -181,13 +181,19 @@ func HandleServerCall(msg interface{}, data *net.UserData) {
 				if nil != data.Agent {
 					if nil != e || nil == in {
 						log.Debug("err:%v", e)
+						var tdata []byte
+						if nil != in {
+							tdata = data.Agent.GetForwardMsg(in)
+						}
 						data.Agent.WriteMsg(
 							&proto.ServerCallBack{
 								FromMId: m.GetFromMId(),
 								ToMId:   m.GetToMId(),
 								CUId:    m.GetCUId(),
 								User:    m.GetUser(),
+								Msginfo: tdata[:],
 							})
+
 					} else {
 						tdata := data.Agent.GetForwardMsg(in)
 						if tdata != nil {
@@ -220,6 +226,11 @@ func HandleServerCallBack(msg interface{}, data *net.UserData) {
 		data.UsersId = m.GetUser().GetUsersId()[:]
 	}
 	//data
+
+	//	log.Debug("mid:%v, cbid:%v, msg:%v", m.GetFromMId(), m.GetCUId(), msg)
+
+	//	log.Debug(" start find callback time:%v", time.Now().String())
+
 	module := mod.ModuleControl.GetModule(m.GetFromMId())
 	if nil == module {
 		log.Debug(" module is nil uid:%v", m.GetFromMId())

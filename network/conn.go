@@ -37,10 +37,11 @@ func (this *ConnManager) AddUserConn(id int64, uid int64) bool {
 	if v, ok := this.userNewConn[id]; ok {
 		if _, ok := this.userConn[uid]; ok {
 			log.Debug("userConn agent have add,  stop old add new, uid：%v,  id:%v", uid, id)
-			this.userConn[uid].Close()
+			this.userConn[uid].OnlyClose()
 			//触发断线重连
 			relink = true
 		}
+		log.Debug("user login, uid：%v,  id:%v", uid, id)
 		this.userConn[uid] = v
 		this.userConn[uid].SetLogin()
 		this.userConn[uid].SetRemotUID(uid)
@@ -180,6 +181,18 @@ func (this *ConnManager) ForwardClientNoticeMsg(uid []int64, msg interface{}) {
 
 		if _, ok := this.userConn[v]; ok {
 			this.userConn[v].WriteMsg(msg)
+		} else {
+			log.Debug("no this userConn, id:%v", v)
+		}
+	}
+	this.mutexConns.Unlock()
+}
+
+func (this *ConnManager) ForwardAllClientNoticeMsg(msg interface{}) {
+	this.mutexConns.Lock()
+	for _, v := range this.userConn {
+		if nil != v {
+			v.WriteMsg(msg)
 		} else {
 			log.Debug("no this userConn, id:%v", v)
 		}

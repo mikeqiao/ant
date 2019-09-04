@@ -165,7 +165,7 @@ func startServer() {
 		server.ListenAddr = c.ListenAddr //"192.168.31.222:6001"
 		server.Pid = c.Pid
 		server.Version = c.Version
-		server.HTTPTimeout = 10 * time.Second
+		server.HTTPTimeout = 30 * time.Second
 		server.CertFile = c.CertFile
 		server.KeyFile = c.KeyFile
 		if P != nil {
