@@ -1,6 +1,7 @@
 package mod
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -78,6 +79,16 @@ func (m *Module) Start() {
 }
 
 func (m *Module) Close() {
+	err := errors.New("Module colsed")
+	for _, v := range m.waitback {
+		if nil != v {
+
+			v.SetResult(nil, err)
+		}
+	}
+
+	//	log.Debug(" end find  callback time:%v", time.Now().String())
+
 	m.closeSig <- true
 }
 
